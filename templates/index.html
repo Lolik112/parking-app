@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ParkVision — Моніторинг парковки</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0b0f14;
+      --surface:   #131820;
+      --border:    #1e2632;
+      --accent:    #00e07a;
+      --danger:    #ff4455;
+      --text:      #e8edf3;
+      --muted:     #5a6478;
+      --card-glow: 0 0 32px rgba(0,224,122,.07);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+    .logo svg { color: var(--accent); }
+    .logo span { color: var(--accent); }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .4; transform: scale(.7); }
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 20px;
+      padding: 24px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── VIDEO PANEL ── */
+    .video-wrap {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #000;
+      position: relative;
+      aspect-ratio: 16/9;
+      box-shadow: var(--card-glow);
+    }
+    .video-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .video-label {
+      position: absolute;
+      top: 12px; left: 12px;
+      background: rgba(11,15,20,.75);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 11px;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 20px;
+      box-shadow: var(--card-glow);
+    }
+
+    .card-title {
+      font-size: .68rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* big number */
+    .stat-big {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .stat-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 3rem;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--accent);
+      transition: color .3s;
+    }
+    .stat-denom {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.4rem;
+      color: var(--muted);
+    }
+    .stat-label {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* progress bar */
+    .prog-track {
+      height: 6px;
+      border-radius: 99px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--accent);
+      transition: width .5s ease, background .3s;
+      width: 0%;
+    }
+    .prog-fill.warn  { background: #f5a623; }
+    .prog-fill.danger{ background: var(--danger); }
+
+    /* two-col stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .stat-cell {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 12px;
+    }
+    .stat-cell .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.6rem;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+    .stat-cell .val.green { color: var(--accent); }
+    .stat-cell .val.red   { color: var(--danger); }
+    .stat-cell .lbl {
+      font-size: .68rem;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    /* status message */
+    .status-msg {
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: .82rem;
+      font-weight: 500;
+      text-align: center;
+      transition: background .4s, color .4s;
+    }
+    .status-msg.good   { background: rgba(0,224,122,.1); color: var(--accent); }
+    .status-msg.warn   { background: rgba(245,166,35,.1); color: #f5a623; }
+    .status-msg.danger { background: rgba(255,68,85,.1);  color: var(--danger); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 14px;
+      font-size: .72rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; padding: 16px; }
+      header { padding: 14px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+    </svg>
+    Park<span>Vision</span>
+  </div>
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    Трансляція
+  </div>
+</header>
+
+<main>
+  <!-- Відео -->
+  <div class="video-wrap">
+    <div class="video-label">Камера · Парковка</div>
+    <img id="feed" src="/video_feed" alt="Відеопотік">
+  </div>
+
+  <!-- Сайдбар -->
+  <div class="sidebar">
+
+    <!-- Головна статистика -->
+    <div class="card">
+      <div class="card-title">Доступність</div>
+      <div class="stat-big">
+        <div class="stat-num" id="freeNum">—</div>
+        <div class="stat-denom" id="totalDenom">/—</div>
+      </div>
+      <div class="stat-label">вільних місць зараз</div>
+      <div class="prog-track">
+        <div class="prog-fill" id="progBar"></div>
+      </div>
+    </div>
+
+    <!-- Деталі -->
+    <div class="card">
+      <div class="card-title">Деталі</div>
+      <div class="stats-grid">
+        <div class="stat-cell">
+          <div class="val green" id="freeCount">—</div>
+          <div class="lbl">Вільно</div>
+        </div>
+        <div class="stat-cell">
+          <div class="val red" id="occCount">—</div>
+          <div class="lbl">Зайнято</div>
+        </div>
+        <div class="stat-cell">
+          <div class="val" id="pctNum" style="color:var(--text)">—</div>
+          <div class="lbl">% вільних</div>
+        </div>
+        <div class="stat-cell">
+          <div class="val" id="totalNum" style="color:var(--text)">—</div>
+          <div class="lbl">Всього</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Статус -->
+    <div class="card" style="padding:16px 20px;">
+      <div class="card-title">Статус</div>
+      <div class="status-msg good" id="statusMsg">Завантаження…</div>
+    </div>
+
+  </div>
+</main>
+
+<footer>ParkVision · Система комп'ютерного зору · OpenCV</footer>
+
+<script>
+  async function fetchStats() {
+    try {
+      const r = await fetch('/stats');
+      const d = await r.json();
+
+      const { free, total, occupied, percent_free } = d;
+
+      document.getElementById('freeNum').textContent    = free;
+      document.getElementById('totalDenom').textContent = `/${total}`;
+      document.getElementById('freeCount').textContent  = free;
+      document.getElementById('occCount').textContent   = occupied;
+      document.getElementById('pctNum').textContent     = percent_free + '%';
+      document.getElementById('totalNum').textContent   = total;
+
+      const bar = document.getElementById('progBar');
+      bar.style.width = percent_free + '%';
+      bar.className = 'prog-fill' +
+        (percent_free < 20 ? ' danger' : percent_free < 40 ? ' warn' : '');
+
+      const msg = document.getElementById('statusMsg');
+      if (percent_free === 0) {
+        msg.textContent = '🔴 Парковка повністю зайнята';
+        msg.className = 'status-msg danger';
+      } else if (percent_free < 20) {
+        msg.textContent = '🟡 Майже немає місць';
+        msg.className = 'status-msg warn';
+      } else if (percent_free < 50) {
+        msg.textContent = '🟡 Є кілька вільних місць';
+        msg.className = 'status-msg warn';
+      } else {
+        msg.textContent = '🟢 Багато вільних місць';
+        msg.className = 'status-msg good';
+      }
+
+    } catch(e) { /* відеопотік ще стартує */ }
+  }
+
+  setInterval(fetchStats, 1000);
+  fetchStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+flask>=2.3
+opencv-python-headless>=4.8
+cvzone>=1.6
+numpy>=1.24
